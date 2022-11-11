@@ -4,6 +4,7 @@ const { User } = require("../models/index")
 const { Show } = require("../models/index")
 
 
+
 userRouter.get("/Users", async (req, res) => {
     const users = await User.findAll()
     res.status(200).send(users)

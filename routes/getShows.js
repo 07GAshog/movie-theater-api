@@ -1,6 +1,8 @@
 const { Router } = require("express")
 const showRouter = Router()
 const { Show } = require("../models/index")
+const isEmpty = require("../Validation function/show")
+const { body, validationResult } = require("express-validator")
 
 
 
@@ -46,41 +48,38 @@ showRouter.get("/Shows/Genre/Horror", async (req, res) => {
 })
 
 
-showRouter.put("/Shows/:id/Rated/:rated", async (req, res) => {
+showRouter.put("/Shows/:id/Rated", 
+body("rating").isNumeric(),
+async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return res.status(404).send({ errors: errors.array() })
+    }
     const id = Number(req.params.id)
-    const rated = Number(req.params.rated)
+    const rated = req.body
     const show = await Show.findByPk(id)
-    
-    await show.update({
-        rating: rated
-    })
+    show.rating = rated.rating
 
-    res.sendStatus(200)
+    res.status(200).send(show)
 
 })
 
-showRouter.put("/Shows/:id/Cancelled", async (req, res) => {
+showRouter.put("/Shows/:id/Status",
+body("status").isLength({min: 5}),
+body("status").isLength({max: 25}),
+async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return res.status(404).send({ errors: errors.array() })
+    }
+
     const id = Number(req.params.id)
     const show = await Show.findByPk(id)
-    
-    await show.update({
-        status: "cancelled"
-    })
+    const currentStatus = req.body.status
 
-    res.sendStatus(200)
+    show.status = currentStatus
 
-})
-
-showRouter.put("/Shows/:id/Ongoing", async (req, res) => {
-    const id = Number(req.params.id)
-    const show = await Show.findByPk(id)
-    
-    await show.update({
-        status: "on-going"
-    })
-
-    res.sendStatus(200)
-
+    res.status(200).send(show)
 })
 
 showRouter.delete("/Shows/:id/Delete", async (req, res) => {
@@ -88,7 +87,7 @@ showRouter.delete("/Shows/:id/Delete", async (req, res) => {
     await Show.destroy( {where: {
         id
     }})
-
+    
     res.sendStatus(200)
 })
 
